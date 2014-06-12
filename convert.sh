@@ -12,6 +12,9 @@ TEST_ARCHIVES=(
 "TrueCrypt 7.1a Source.zip" "TrueCrypt 7.1a Source.tar.gz"
 )
 
+# In which directory are the source archives located?
+ARCHIVES_DIR=archives
+
 REPO_ALREADY_EXISTS=false
 
 REPO=tc-repo
@@ -68,7 +71,7 @@ NUM_ARCHIVES=${#ARCHIVES[@]}
 
 # Check if all archives exist
 for (( i=0; i<$NUM_ARCHIVES; i++ )); do
-	ARCHIVE=${ARCHIVES[i]}
+	ARCHIVE=$ARCHIVES_DIR/${ARCHIVES[i]}
 	if [ ! -f "$ARCHIVE" ]; then
 		echo "*** ERROR: file '$ARCHIVE' not found"
 		exit
@@ -102,7 +105,7 @@ rm -rf "$ARCH_DIR"
 
 
 for (( i=0; i<$NUM_ARCHIVES; i++ )); do
-	ARCHIVE=${ARCHIVES[i]}
+	ARCHIVE=$ARCHIVES_DIR/${ARCHIVES[i]}
 	echo
 	echo "*** Processing $ARCHIVE [$((i+1))/$NUM_ARCHIVES]"
 
@@ -143,7 +146,7 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 
 	# Optionally keep a copy of extracted archives
 	if [ $KEEP_EXTRACTED_ARCHIVES == true ]; then
-		cp -r "$ARCH_DIR" "extracted/$ARCHIVE"
+		cp -r "$ARCH_DIR" "extracted/${ARCHIVES[i]}"
 	fi
 
 
