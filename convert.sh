@@ -272,10 +272,11 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 	pushd "$REPO"
 	git commit --short -a 2>/dev/null || true
 	TC_VERSION=$(echo $ARCHIVE | sed 's/[^0-9.]*\([0-9a.]*\).*/\1/')
-	COMMIT_MESSAGE="$TC_VERSION"
+	COMMIT_MESSAGE="$TC_VERSION changes"
 	if [ $IS_ZIP == true ]; then
 		COMMIT_MESSAGE+=" (Windows)"
 	fi
+	COMMIT_MESSAGE+="."
 	git commit -am "$COMMIT_MESSAGE" 2>/dev/null || true
 	popd
 
