@@ -9,7 +9,7 @@ set -e
 TEST=false
 
 TEST_ARCHIVES=(
-"TrueCrypt 7.1a Source.zip" "TrueCrypt 7.1a Source.tar.gz"
+"TrueCrypt 7.1a Source.tar.gz" "TrueCrypt 7.1a Source.zip"
 )
 
 # In which directory are the source archives located?
@@ -36,28 +36,28 @@ ALL_ARCHIVES=(
 "truecrypt-3.0a-source-code.zip"
 "truecrypt-3.1-source-code.zip"
 "truecrypt-3.1a-source-code.zip"
-"truecrypt-4.0-source-code.zip" "truecrypt-4.0-source-code.tar.gz"
-"truecrypt-4.1-source-code.zip" "truecrypt-4.1-source-code.tar.gz"
-"truecrypt-4.2-source-code.zip" "truecrypt-4.2-source-code.tar.gz"
-"truecrypt-4.2a-source-code.zip" "truecrypt-4.2a-source-code.tar.gz"
-"truecrypt-4.3-source-code.zip" "truecrypt-4.3-source-code.tar.gz"
-"truecrypt-4.3a-source-code.zip" "truecrypt-4.3a-source-code.tar.gz"
-"TrueCrypt 5.0 Source.zip" "TrueCrypt 5.0 Source.tar.gz"
-"TrueCrypt 5.0a Source.zip" "TrueCrypt 5.0a Source.tar.gz"
-"TrueCrypt 5.1 source.zip" "TrueCrypt 5.1 Source.tar.gz"
-"TrueCrypt 5.1a Source.zip" "TrueCrypt 5.1a Source.tar.gz"
-"TrueCrypt 6.0 Source.zip" "TrueCrypt 6.0 Source.tar.gz"
-"TrueCrypt 6.0a Source.zip" "TrueCrypt 6.0a Source.tar.gz"
-"TrueCrypt 6.1 Source.zip" "TrueCrypt 6.1 Source.tar.gz"
-"TrueCrypt 6.1a Source.zip" "TrueCrypt 6.1a Source.tar.gz"
-"TrueCrypt 6.2 Source.zip" "TrueCrypt 6.2 Source.tar.gz"
-"TrueCrypt 6.2a Source.zip" "TrueCrypt 6.2a Source.tar.gz"
-"TrueCrypt 6.3 Source.zip" "TrueCrypt 6.3 Source.tar.gz"
-"TrueCrypt 6.3a Source.zip" "TrueCrypt 6.3a Source.tar.gz"
-"TrueCrypt 7.0 Source.zip" "TrueCrypt 7.0 Source.tar.gz"
-"TrueCrypt 7.0a Source.zip" "TrueCrypt 7.0a Source.tar.gz"
-"TrueCrypt 7.1 Source.zip" "TrueCrypt 7.1 Source.tar.gz"
-"TrueCrypt 7.1a Source.zip" "TrueCrypt 7.1a Source.tar.gz"
+"truecrypt-4.0-source-code.tar.gz" "truecrypt-4.0-source-code.zip"
+"truecrypt-4.1-source-code.tar.gz" "truecrypt-4.1-source-code.zip"
+"truecrypt-4.2-source-code.tar.gz" "truecrypt-4.2-source-code.zip"
+"truecrypt-4.2a-source-code.tar.gz" "truecrypt-4.2a-source-code.zip"
+"truecrypt-4.3-source-code.tar.gz" "truecrypt-4.3-source-code.zip"
+"truecrypt-4.3a-source-code.tar.gz" "truecrypt-4.3a-source-code.zip"
+"TrueCrypt 5.0 Source.tar.gz" "TrueCrypt 5.0 Source.zip"
+"TrueCrypt 5.0a Source.tar.gz" "TrueCrypt 5.0a Source.zip"
+"TrueCrypt 5.1 Source.tar.gz" "TrueCrypt 5.1 source.zip"
+"TrueCrypt 5.1a Source.tar.gz" "TrueCrypt 5.1a Source.zip"
+"TrueCrypt 6.0 Source.tar.gz" "TrueCrypt 6.0 Source.zip"
+"TrueCrypt 6.0a Source.tar.gz" "TrueCrypt 6.0a Source.zip"
+"TrueCrypt 6.1 Source.tar.gz" "TrueCrypt 6.1 Source.zip"
+"TrueCrypt 6.1a Source.tar.gz" "TrueCrypt 6.1a Source.zip"
+"TrueCrypt 6.2 Source.tar.gz" "TrueCrypt 6.2 Source.zip"
+"TrueCrypt 6.2a Source.tar.gz" "TrueCrypt 6.2a Source.zip"
+"TrueCrypt 6.3 Source.tar.gz" "TrueCrypt 6.3 Source.zip"
+"TrueCrypt 6.3a Source.tar.gz" "TrueCrypt 6.3a Source.zip"
+"TrueCrypt 7.0 Source.tar.gz" "TrueCrypt 7.0 Source.zip"
+"TrueCrypt 7.0a Source.tar.gz" "TrueCrypt 7.0a Source.zip"
+"TrueCrypt 7.1 Source.tar.gz" "TrueCrypt 7.1 Source.zip"
+"TrueCrypt 7.1a Source.tar.gz" "TrueCrypt 7.1a Source.zip"
 )
 
 if [ $TEST == true ]; then
@@ -272,7 +272,7 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 	pushd "$REPO"
 	git commit --short -a 2>/dev/null || true
 	TC_VERSION=$(echo $ARCHIVE | sed 's/[^0-9.]*\([0-9a.]*\).*/\1/')
-	COMMIT_MESSAGE=$TC_VERSION
+	COMMIT_MESSAGE="$TC_VERSION"
 	if [ $IS_ZIP == true ]; then
 		COMMIT_MESSAGE+=" (Windows)"
 	fi
