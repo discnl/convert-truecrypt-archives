@@ -12,6 +12,22 @@ TEST_ARCHIVES=(
 "TrueCrypt 7.1a Source.tar.gz" "TrueCrypt 7.1a Source.zip"
 )
 
+
+# What to do with EOLs?
+# auto :
+# Let git handle it automatically.
+
+# mixed :
+# Use LF for all files except those that are unique to the ZIP archive.
+# The unique files keep CRLF and include these files:
+# ./Setup/*
+# ./TrueCrypt.sln
+# Using mixed mode makes it easier to verify files: all files from a tgz
+# should be the same as what's in the repository. The remaining ZIP
+# specific files have to be verified against a ZIP archive.
+EOL_HANDLING=mixed
+#EOL_HANDLING=auto
+
 # In which directory are the source archives located?
 ARCHIVES_DIR=archives
 
@@ -88,12 +104,14 @@ if [ $REPO_ALREADY_EXISTS == false ]; then
 	git init "$REPO" >/dev/null
 fi
 
-# deal with line-ending changes
-pushd "$REPO"
-echo "* text=auto" >> .gitattributes
-git add .gitattributes
-git commit -m "Commit .gitattributes."
-popd
+if [ $EOL_HANDLING == "auto" ]; then
+	# deal with line-ending changes
+	pushd "$REPO"
+	echo "* text=auto" >> .gitattributes
+	git add .gitattributes
+	git commit -m "Commit .gitattributes."
+	popd
+fi
 
 rm -rf extracted
 if [ $KEEP_EXTRACTED_ARCHIVES == true ]; then
@@ -103,6 +121,84 @@ fi
 ARCH_DIR=archive
 rm -rf "$ARCH_DIR"
 
+mv_archive_file_to_repo () {
+	FILEPATH=$1
+
+	if [ $EOL_HANDLING == "auto" ]; then
+		mv "$ARCH_DIR/$FILEPATH" "$REPO/$FILEPATH"
+		return
+	fi
+
+	CONVERT_EOL=false
+
+	BASENAME="$(basename "$FILEPATH")"
+
+	if [ "$(dirname "$FILEPATH")" == "./Setup" ] \
+		|| [ "$BASENAME" == "TrueCrypt.sln" ]; then
+		CONVERT_EOL=false
+	else
+		# Some of the files from ZIP archives have to be converted from using CRLF to LF.
+		# Otherwise every time when switching between the ZIP and tgz archives there will
+		# be major changes that merely consist of EOL changes.
+		EXT="${FILEPATH##*.}"
+
+		if [ "$BASENAME" == "Makefile" ] \
+			|| [ "$BASENAME" == "MAKEFILE" ] \
+			|| [ $EXT == "1" ] \
+			|| [ $EXT == "C" ] || [ $EXT == "c" ] \
+			|| [ $EXT == "cpp" ] \
+			|| [ $EXT == "H" ] ||  [ $EXT == "h" ] \
+			|| [ $EXT == "html" ] || [ $EXT == "inc" ] \
+			|| [ $EXT == "make" ] \
+			|| [ $EXT == "sh" ] || [ $EXT == "sln" ] \
+			|| [ $EXT == "txt" ] \
+			|| [ $EXT == "xml" ]; then
+
+			CONVERT_EOL=LF
+
+		elif [ "$BASENAME" == "Sources" ] \
+			|| [ $EXT == "asm" ] \
+			|| [ $EXT == "bat" ] \
+			|| [ $EXT == "cmd" ] \
+			|| [ $EXT == "fbp" ] \
+			|| [ $EXT == "idl" ] \
+			|| [ $EXT == "manifest" ] \
+			|| [ $EXT == "pdf" ] \
+			|| [ $EXT == "rc" ] \
+			|| [ $EXT == "rtf" ] \
+			|| [ $EXT == "vcproj" ]; then
+
+			# Almost always these files already are CRLF but some of
+			# the tar.gz archives store them as LF.
+			CONVERT_EOL=CRLF
+
+		fi
+	fi
+
+
+	if [ $CONVERT_EOL == "LF" ]; then
+		# File has CRLF?
+		if [[ $(head -1 "$ARCH_DIR/$FILEPATH") == *$'\r' ]]; then
+			# Replace CRLF with LF
+			tr -d "\r" < "$ARCH_DIR/$FILEPATH" > "$REPO/$FILEPATH"
+			rm "$ARCH_DIR/$FILEPATH"
+		else
+			CONVERT_EOL=false
+		fi
+	elif [ $CONVERT_EOL == "CRLF" ]; then
+		# if the file already has CRLF don't convert it (would become CRCRLF)
+		if [[ $(head -1 "$ARCH_DIR/$FILEPATH") == *$'\r' ]]; then
+			CONVERT_EOL=false
+		else
+			tr "\r" "\r\n" < "$ARCH_DIR/$FILEPATH" > "$REPO/$FILEPATH"
+			rm "$ARCH_DIR/$FILEPATH"
+		fi
+	fi
+
+	if [ $CONVERT_EOL == false ]; then
+		mv "$ARCH_DIR/$FILEPATH" "$REPO/$FILEPATH"
+	fi
+}
 
 for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 	ARCHIVE=$ARCHIVES_DIR/${ARCHIVES[i]}
@@ -246,10 +342,10 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 				rm "$ARCH_DIR/$FILE"
 			else
 				# File with same name
-				mv "$ARCH_DIR/$FILE" "$REPO/$FILE"
+				mv_archive_file_to_repo "$FILE"
 			fi
 		else
-			mv "$ARCH_DIR/$FILE" "$REPO/$FILE"
+			mv_archive_file_to_repo "$FILE"
 
 			pushd "$REPO"
 			git add "$FILE" >/dev/null 2>&1
