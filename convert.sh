@@ -204,7 +204,7 @@ mv_archive_file_to_repo () {
 			|| [ $EXT == "H" ] ||  [ $EXT == "h" ] \
 			|| [ $EXT == "html" ] || [ $EXT == "inc" ] \
 			|| [ $EXT == "make" ] \
-			|| [ $EXT == "sh" ] || [ $EXT == "sln" ] \
+			|| [ $EXT == "sh" ] \
 			|| [ $EXT == "txt" ] \
 			|| [ $EXT == "xml" ]; then
 
