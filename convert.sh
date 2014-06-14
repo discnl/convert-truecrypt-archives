@@ -44,14 +44,15 @@ KEEP_EXTRACTED_ARCHIVES=true
 
 
 ALL_ARCHIVES=(
-"truecrypt-1.0-source-code.zip"
-"truecrypt-1.0a-source-code.zip"
-"truecrypt-2.0-source-code.zip"
-"truecrypt-2.1-source-code.zip"
-"truecrypt-2.1a-source-code.zip"
-"truecrypt-3.0a-source-code.zip"
-"truecrypt-3.1-source-code.zip"
-"truecrypt-3.1a-source-code.zip"
+"" "truecrypt-1.0-source-code.zip"
+"" "truecrypt-1.0a-source-code.zip"
+"" "truecrypt-2.0-source-code.zip"
+"" "truecrypt-2.1-source-code.zip"
+"" "truecrypt-2.1a-source-code.zip"
+"" "" # 3.0 is missing
+"" "truecrypt-3.0a-source-code.zip"
+"" "truecrypt-3.1-source-code.zip"
+"" "truecrypt-3.1a-source-code.zip"
 "truecrypt-4.0-source-code.tar.gz" "truecrypt-4.0-source-code.zip"
 "truecrypt-4.1-source-code.tar.gz" "truecrypt-4.1-source-code.zip"
 "truecrypt-4.2-source-code.tar.gz" "truecrypt-4.2-source-code.zip"
@@ -76,6 +77,47 @@ ALL_ARCHIVES=(
 "TrueCrypt 7.1a Source.tar.gz" "TrueCrypt 7.1a Source.zip"
 )
 
+# Release dates of the releases. Most of these come
+# from http://en.wikipedia.org/wiki/TrueCrypt_release_history
+RELEASE_DATES=(
+"2004 02 02" # 1.0
+"2004 02 03" # 1.0a
+"2004 06 07" # 2.0
+"2004 06 21" # 2.1
+"2004 10 01" # 2.1a
+"2004 12 10" # 3.0 (missing), approximate date
+"2004 12 11" # 3.0a
+"2005 01 22" # 3.1
+"2005 02 07" # 3.1a
+"2005 11 01" # 4.0
+"2005 11 25" # 4.1
+"2006 04 17" # 4.2
+"2006 07 04" # 4.2a, approximate date
+"2007 03 19" # 4.3
+"2007 05 08" # 4.3a, approximate date
+"2008 02 05" # 5.0
+"2008 02 13" # 5.0a, approximate date
+"2008 03 10" # 5.1
+"2008 03 17" # 5.1a, approximate date
+"2008 07 04" # 6.0
+"2008 07 08" # 6.0a
+"2008 10 31" # 6.1
+"2008 12 01" # 6.1a
+"2009 05 11" # 6.2
+"2009 06 19" # 6.2a
+"2009 10 21" # 6.3
+"2009 11 23" # 6.3a
+"2010 07 19" # 7.0
+"2010 09 06" # 7.0a
+"2011 09 01" # 7.1
+"2012 02 07" # 7.1a
+)
+
+if [ ${#ALL_ARCHIVES[@]} != $((${#RELEASE_DATES[@]} * 2)) ]; then
+	echo "*** ERROR: Amount of archive versions and release dates out of sync"
+	exit
+fi
+
 if [ $TEST == true ]; then
 	ARCHIVES=("${TEST_ARCHIVES[@]}")
 else
@@ -88,7 +130,7 @@ NUM_ARCHIVES=${#ARCHIVES[@]}
 # Check if all archives exist
 for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 	ARCHIVE=$ARCHIVES_DIR/${ARCHIVES[i]}
-	if [ ! -f "$ARCHIVE" ]; then
+	if [ -n "${ARCHIVES[i]}" ] && [ ! -f "$ARCHIVE" ]; then
 		echo "*** ERROR: file '$ARCHIVE' not found"
 		exit
 	fi
@@ -109,7 +151,8 @@ if [ $EOL_HANDLING == "auto" ]; then
 	pushd "$REPO"
 	echo "* text=auto" >> .gitattributes
 	git add .gitattributes
-	git commit -m "Commit .gitattributes."
+	export GIT_COMMITTER_DATE="${RELEASE_DATES[0]} 00:00:00"
+	git commit -m "Commit .gitattributes." --date="$GIT_COMMITTER_DATE"
 	popd
 fi
 
@@ -201,7 +244,14 @@ mv_archive_file_to_repo () {
 }
 
 for (( i=0; i<$NUM_ARCHIVES; i++ )); do
+
+	# Skip archives that aren't available
+	if [ -z "${ARCHIVES[i]}" ]; then
+		continue
+	fi
+
 	ARCHIVE=$ARCHIVES_DIR/${ARCHIVES[i]}
+
 	echo
 	echo "*** Processing $ARCHIVE [$((i+1))/$NUM_ARCHIVES]"
 
@@ -378,7 +428,9 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 		COMMIT_MESSAGE+=" (Windows)"
 	fi
 	COMMIT_MESSAGE+="."
-	git commit -am "$COMMIT_MESSAGE" 2>/dev/null || true
+
+	export GIT_COMMITTER_DATE="${RELEASE_DATES[i / 2]} 00:00:00"
+	git commit -am "$COMMIT_MESSAGE" --date="$GIT_COMMITTER_DATE" 2>/dev/null || true
 	popd
 
 	rm -r "$ARCH_DIR"
