@@ -35,6 +35,9 @@ REPO_ALREADY_EXISTS=false
 
 REPO=tc-repo
 
+# Add a (lightweight) tag for each TC release? (named "TC_<version>")
+TAG=true
+
 # keep a copy of the extracted archives in extracted/ ?
 KEEP_EXTRACTED_ARCHIVES=true
 
@@ -431,6 +434,13 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 
 	export GIT_COMMITTER_DATE="${RELEASE_DATES[i / 2]} 00:00:00"
 	git commit -am "$COMMIT_MESSAGE" --date="$GIT_COMMITTER_DATE" 2>/dev/null || true
+	if [ $TAG == true ]; then
+		TAG_NAME=TC_$TC_VERSION
+		if [ $IS_ZIP == true ]; then
+			TAG_NAME+="-w"
+		fi
+		git tag "$TAG_NAME"
+	fi
 	popd
 
 	rm -r "$ARCH_DIR"
