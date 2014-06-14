@@ -38,6 +38,11 @@ REPO=tc-repo
 # Add a (lightweight) tag for each TC release? (named "TC_<version>")
 TAG=true
 
+# Set to true to collapse the extracted tgz and zip of the same
+# release into one commit.
+# If set to false each processed archive will have a commit.
+COLLAPSE_COMMITS=true
+
 # keep a copy of the extracted archives in extracted/ ?
 KEEP_EXTRACTED_ARCHIVES=true
 
@@ -450,30 +455,32 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 	fi
 
 
-	pushd "$REPO"
-	git commit --short -a 2>/dev/null || true
-	TC_VERSION=$(echo $ARCHIVE | sed 's/[^0-9.]*\([0-9a.]*\).*/\1/')
-	if [ $TC_VERSION == "3.0a" ]; then
-		COMMIT_MESSAGE="3.0+3.0a changes"
-	else
-		COMMIT_MESSAGE="$TC_VERSION changes"
-	fi
-
-	if [ $IS_ZIP == true ]; then
-		COMMIT_MESSAGE+=" (Windows)"
-	fi
-	COMMIT_MESSAGE+="."
-
-	export GIT_COMMITTER_DATE="${RELEASE_DATES[i / 2]} 00:00:00"
-	git commit -am "$COMMIT_MESSAGE" --date="$GIT_COMMITTER_DATE" 2>/dev/null || true
-	if [ $TAG == true ]; then
-		TAG_NAME=TC_$TC_VERSION
-		if [ $IS_ZIP == true ]; then
-			TAG_NAME+="-w"
+	if [ $COLLAPSE_COMMITS == false ] || [ $IS_ZIP == true ]; then
+		pushd "$REPO"
+		git commit --short -a 2>/dev/null || true
+		TC_VERSION=$(echo $ARCHIVE | sed 's/[^0-9.]*\([0-9a.]*\).*/\1/')
+		if [ $TC_VERSION == "3.0a" ]; then
+			COMMIT_MESSAGE="3.0+3.0a changes"
+		else
+			COMMIT_MESSAGE="$TC_VERSION changes"
 		fi
-		git tag "$TAG_NAME"
+
+		if [ $IS_ZIP == true ] && [ $COLLAPSE_COMMITS == false ]; then
+			COMMIT_MESSAGE+=" (Windows)"
+		fi
+		COMMIT_MESSAGE+="."
+
+		export GIT_COMMITTER_DATE="${RELEASE_DATES[i / 2]} 00:00:00"
+		git commit -am "$COMMIT_MESSAGE" --date="$GIT_COMMITTER_DATE" 2>/dev/null || true
+		if [ $TAG == true ]; then
+			TAG_NAME=TC_$TC_VERSION
+			if [ $IS_ZIP == true ] && [ $COLLAPSE_COMMITS == false ]; then
+				TAG_NAME+="-w"
+			fi
+			git tag "$TAG_NAME"
+		fi
+		popd
 	fi
-	popd
 
 	rm -r "$ARCH_DIR"
 
