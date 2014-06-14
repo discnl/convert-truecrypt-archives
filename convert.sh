@@ -177,16 +177,24 @@ mv_archive_file_to_repo () {
 
 	CONVERT_EOL=false
 
-	BASENAME="$(basename "$FILEPATH")"
+	EXT="${FILEPATH##*.}"
 
-	if [ "$(dirname "$FILEPATH")" == "./Setup" ] \
-		|| [ "$BASENAME" == "TrueCrypt.sln" ]; then
-		CONVERT_EOL=false
-	else
+	if [ "$(dirname "$FILEPATH")" == "./Setup" ]; then
+		# All the text files in Setup/ are Windows specific. Keep them
+		# as CRLF (unless binary).
+
+		if [ $EXT == "bmp" ] || [ $EXT == "ico" ]; then
+			CONVERT_EOL=false
+		else
+			CONVERT_EOL=CRLF
+		fi
+	fi
+
+	if [ $CONVERT_EOL == false ]; then
 		# Some of the files from ZIP archives have to be converted from using CRLF to LF.
 		# Otherwise every time when switching between the ZIP and tgz archives there will
 		# be major changes that merely consist of EOL changes.
-		EXT="${FILEPATH##*.}"
+		BASENAME="$(basename "$FILEPATH")"
 
 		if [ "$BASENAME" == "Makefile" ] \
 			|| [ "$BASENAME" == "MAKEFILE" ] \
@@ -212,6 +220,7 @@ mv_archive_file_to_repo () {
 			|| [ $EXT == "pdf" ] \
 			|| [ $EXT == "rc" ] \
 			|| [ $EXT == "rtf" ] \
+			|| [ $EXT == "sln" ] \
 			|| [ $EXT == "vcproj" ]; then
 
 			# Almost always these files already are CRLF but some of
