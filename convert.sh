@@ -246,7 +246,7 @@ mv_archive_file_to_repo () {
 		if [[ $(head -1 "$ARCH_DIR/$FILEPATH") == *$'\r' ]]; then
 			CONVERT_EOL=false
 		else
-			tr "\r" "\r\n" < "$ARCH_DIR/$FILEPATH" > "$REPO/$FILEPATH"
+			awk '{ sub(/$/,"\r"); print }' < "$ARCH_DIR/$FILEPATH" > "$REPO/$FILEPATH"
 			rm "$ARCH_DIR/$FILEPATH"
 		fi
 	fi
