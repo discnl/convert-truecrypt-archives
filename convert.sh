@@ -160,9 +160,7 @@ if [ $EOL_HANDLING == "auto" ]; then
 fi
 
 rm -rf extracted
-if [ $KEEP_EXTRACTED_ARCHIVES == true ]; then
-	mkdir extracted
-fi
+mkdir extracted
 
 ARCH_DIR=archive
 rm -rf "$ARCH_DIR"
@@ -303,9 +301,33 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 		rm -r "$ARCH_DIR/TrueCrypt"
 	fi
 
-	# Optionally keep a copy of extracted archives
-	if [ $KEEP_EXTRACTED_ARCHIVES == true ]; then
-		cp -r "$ARCH_DIR" "extracted/${ARCHIVES[i]}"
+	cp -r "$ARCH_DIR" "extracted/${ARCHIVES[i]}"
+
+	if [ $IS_ZIP == true ]; then
+		# Out of interest, mention any diffs that exist between the tgz and
+		# zip archive of the same release
+		BACKUP_DIR_ZIP="extracted/${ARCHIVES[i]}"
+
+		IFS_OLD=$IFS
+		IFS=","
+		pushd "$BACKUP_DIR_ZIP"
+		FILES=($(find . -type f -exec echo -n {}, \;))
+		popd
+		IFS=$IFS_OLD
+
+		for (( j=0; j<${#FILES[@]}; j++ )); do
+			FILE="${FILES[j]}"
+			if [ -f "$BACKUP_DIR_TGZ/$FILE" ]; then
+				diff -u -w "$BACKUP_DIR_TGZ/$FILE" "$BACKUP_DIR_ZIP/$FILE" || true
+			fi
+		done
+	else
+		BACKUP_DIR_TGZ="extracted/${ARCHIVES[i]}"
+
+		if [ $KEEP_EXTRACTED_ARCHIVES == false ]; then
+			rm -r "$BACKUP_DIR_TGZ"
+			rm -r "$BACKUP_DIR_ZIP"
+		fi
 	fi
 
 
@@ -456,3 +478,7 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 	rm -r "$ARCH_DIR"
 
 done
+
+if [ $KEEP_EXTRACTED_ARCHIVES == false ]; then
+	rm -r extracted
+fi
