@@ -489,3 +489,5 @@ done
 if [ $KEEP_EXTRACTED_ARCHIVES == false ]; then
 	rm -r extracted
 fi
+
+echo "All done!"
