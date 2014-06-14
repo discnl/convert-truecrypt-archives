@@ -35,7 +35,7 @@ REPO_ALREADY_EXISTS=false
 
 REPO=tc-repo
 
-# Add a (lightweight) tag for each TC release? (named "TC_<version>")
+# Add a (lightweight) tag for each TC release? (named "tc-<version>")
 TAG=true
 
 # Set to true to collapse the extracted tgz and zip of the same
@@ -473,7 +473,7 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 		export GIT_COMMITTER_DATE="${RELEASE_DATES[i / 2]} 00:00:00"
 		git commit -am "$COMMIT_MESSAGE" --date="$GIT_COMMITTER_DATE" 2>/dev/null || true
 		if [ $TAG == true ]; then
-			TAG_NAME=TC_$TC_VERSION
+			TAG_NAME=tc-$TC_VERSION
 			if [ $IS_ZIP == true ] && [ $COLLAPSE_COMMITS == false ]; then
 				TAG_NAME+="-w"
 			fi
