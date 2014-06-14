@@ -219,6 +219,7 @@ mv_archive_file_to_repo () {
 			|| [ $EXT == "manifest" ] \
 			|| [ $EXT == "pdf" ] \
 			|| [ $EXT == "rc" ] \
+			|| [ $EXT == "rgs" ] \
 			|| [ $EXT == "rtf" ] \
 			|| [ $EXT == "sln" ] \
 			|| [ $EXT == "vcproj" ]; then
