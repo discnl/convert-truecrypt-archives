@@ -170,6 +170,9 @@ mkdir extracted
 ARCH_DIR=archive
 rm -rf "$ARCH_DIR"
 
+USE_UNZIP=true
+command -v unzip >/dev/null 2>&1 || USE_UNZIP=false
+
 mv_archive_file_to_repo () {
 	FILEPATH=$1
 
@@ -285,17 +288,21 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 	fi
 
 	if [ $IS_ZIP = true ]; then
-		# ZIP doesn't support maintaining file permissions and depending
-		# on the umask used ZIP files could be extracted with +x. Override
-		# the file permissions that tar uses and make them the same
-		# (rw-r--r--) as when extracting the tgz archive.
-		OLD_UMASK=`umask`
-		umask -S u=rw,g=r,o=r >/dev/null # same as: umask 0133
-		tar -xf "$ARCHIVE" --no-same-permissions -C "$ARCH_DIR"
-		umask $OLD_UMASK
+		if [ $USE_UNZIP == true ]; then
+			unzip "$ARCHIVE" -d "$ARCH_DIR" >/dev/null
+		else
+			# ZIP doesn't support maintaining file permissions and depending
+			# on the umask used ZIP files could be extracted with +x. Override
+			# the file permissions that tar uses and make them the same
+			# (rw-r--r--) as when extracting the tgz archive.
+			OLD_UMASK=`umask`
+			umask -S u=rw,g=r,o=r >/dev/null # same as: umask 0133
+			tar -xf "$ARCHIVE" --no-same-permissions -C "$ARCH_DIR"
+			umask $OLD_UMASK
 
-		# Fix directories and some files that don't have +x:
-		find "$ARCH_DIR" -type d -exec chmod +x {} \;
+			# Fix directories and some files that don't have +x:
+			find "$ARCH_DIR" -type d -exec chmod +x {} \;
+		fi
 	else
 		tar -xf "$ARCHIVE" --strip-components 1 -C "$ARCH_DIR"
 	fi
