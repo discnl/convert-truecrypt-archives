@@ -277,6 +277,12 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 	if [ "${ARCHIVE##*.}" == "zip" ]; then
 		IS_ZIP=true
 	fi
+	# Handling left (by default tgz) or right (by default zip) archive?
+	if [ $((i%2)) -eq 1 ]; then
+		IS_RIGHT_ARCHIVE=true
+	else
+		IS_RIGHT_ARCHIVE=false
+	fi
 
 	if [ $IS_ZIP = true ]; then
 		# ZIP doesn't support maintaining file permissions and depending
@@ -308,24 +314,25 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 
 	cp -r "$ARCH_DIR" "extracted/${ARCHIVES[i]}"
 
-	if [ $IS_ZIP == true ]; then
+	if [ $IS_RIGHT_ARCHIVE == true ]; then
 		# Out of interest, mention any diffs that exist between the tgz and
 		# zip archive of the same release
-		BACKUP_DIR_ZIP="extracted/${ARCHIVES[i]}"
+		#BACKUP_DIR_ZIP="extracted/${ARCHIVES[i]}"
+		BACKUP_DIR_RIGHT_ARCHIVE="extracted/${ARCHIVES[i]}"
 
-		pushd "$BACKUP_DIR_ZIP"
+		pushd "$BACKUP_DIR_RIGHT_ARCHIVE"
 		find . -type f|while read FILE; do
-			if [ -f "../$BACKUP_DIR_TGZ/$FILE" ]; then
-				diff -u -w "../$BACKUP_DIR_TGZ/$FILE" "$FILE" || true
+			if [ -f "../$BACKUP_DIR_LEFT_ARCHIVE/$FILE" ]; then
+				diff -u -w "../$BACKUP_DIR_LEFT_ARCHIVE/$FILE" "$FILE" || true
 			fi
 		done
 		popd
 	else
-		BACKUP_DIR_TGZ="extracted/${ARCHIVES[i]}"
+		BACKUP_DIR_LEFT_ARCHIVE="extracted/${ARCHIVES[i]}"
 
 		if [ $KEEP_EXTRACTED_ARCHIVES == false ]; then
-			rm -r "$BACKUP_DIR_TGZ"
-			rm -r "$BACKUP_DIR_ZIP"
+			rm -r "$BACKUP_DIR_LEFT_ARCHIVE"
+			rm -r "$BACKUP_DIR_RIGHT_ARCHIVE"
 		fi
 	fi
 
@@ -438,7 +445,7 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 	fi
 
 
-	if [ $COLLAPSE_COMMITS == false ] || [ $IS_ZIP == true ]; then
+	if [ $COLLAPSE_COMMITS == false ] || [ $IS_RIGHT_ARCHIVE == true ]; then
 		pushd "$REPO"
 		git commit --short -a 2>/dev/null || true
 		TC_VERSION=$(echo $ARCHIVE | sed 's/[^0-9.]*\([0-9a.]*\).*/\1/')
