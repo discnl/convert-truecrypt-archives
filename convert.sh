@@ -313,19 +313,13 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 		# zip archive of the same release
 		BACKUP_DIR_ZIP="extracted/${ARCHIVES[i]}"
 
-		IFS_OLD=$IFS
-		IFS=","
 		pushd "$BACKUP_DIR_ZIP"
-		FILES=($(find . -type f -exec echo -n {}, \;))
-		popd
-		IFS=$IFS_OLD
-
-		for (( j=0; j<${#FILES[@]}; j++ )); do
-			FILE="${FILES[j]}"
-			if [ -f "$BACKUP_DIR_TGZ/$FILE" ]; then
-				diff -u -w "$BACKUP_DIR_TGZ/$FILE" "$BACKUP_DIR_ZIP/$FILE" || true
+		find . -type f|while read FILE; do
+			if [ -f "../$BACKUP_DIR_TGZ/$FILE" ]; then
+				diff -u -w "../$BACKUP_DIR_TGZ/$FILE" "$FILE" || true
 			fi
 		done
+		popd
 	else
 		BACKUP_DIR_TGZ="extracted/${ARCHIVES[i]}"
 
@@ -340,14 +334,9 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 	# in the archive? Then rm the file from the repo (but not under all
 	# circumstances, as the archives of the same version don't always have
 	# the same files)
-	IFS_OLD=$IFS
-	IFS=","
 	pushd "$REPO"
-	REPO_FILES=($(find . ! -path "*/.git/*" ! -iname ".*" -type f -exec echo -n {}, \;))
-	popd
-	IFS=$IFS_OLD
-	for (( j=0; j<${#REPO_FILES[@]}; j++ )); do
-		REPO_FILE=${REPO_FILES[j]}
+	find . ! -path "*/.git/*" ! -iname ".*" -type f|while read REPO_FILE; do
+		popd
 
 		REMOVE=false
 		if [ ! -f "$ARCH_DIR/$REPO_FILE" ]; then
@@ -390,37 +379,29 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 				popd
 			fi
 		fi
-	done
 
+		pushd "$REPO"
+	done
+	popd
 
 	# Add any missing dirs to the repo
-	IFS_OLD=$IFS
-	IFS=","
-	pushd "$ARCH_DIR"
-	DIRS=($(find . -type d -exec echo -n {}, \;))
-	popd
-	IFS=$IFS_OLD
 
-	for (( j=0; j<${#DIRS[@]}; j++ )); do
-		if [ ! -d "$REPO/${DIRS[j]}" ]; then
-			pushd "$REPO"
-			mkdir "${DIRS[j]}"
-			git add "${DIRS[j]}"
+	pushd "$ARCH_DIR"
+	find . -type d|while read DIR; do
+		if [ ! -d "../$REPO/$DIR" ]; then
+			pushd "../$REPO"
+			mkdir "$DIR"
+			git add "$DIR"
 			popd
 		fi
 	done
+	popd
 
 
 	# Check for file changes
-	IFS_OLD=$IFS
-	IFS=","
 	pushd "$ARCH_DIR"
-	FILES=($(find . -type f -exec echo -n {}, \;))
-	popd
-	IFS=$IFS_OLD
-
-	for (( j=0; j<${#FILES[@]}; j++ )); do
-		FILE="${FILES[j]}"
+	find . -type f|while read FILE; do
+		popd
 		if [ -f "$REPO/$FILE" ]; then
 			FILENAME_CASING_CHANGED=$(find "$REPO/`dirname "$FILE"`" -name "`basename "$FILE"`" -maxdepth 1 | wc -l)
 			if [ $FILENAME_CASING_CHANGED -eq 0 ]; then
@@ -441,7 +422,9 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 			git add "$FILE" >/dev/null 2>&1
 			popd
 		fi
+		pushd "$ARCH_DIR"
 	done
+	popd
 
 	#if [ $i -eq "1" ]; then
 	#	exit
