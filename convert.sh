@@ -313,7 +313,7 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 
 
 	# if the archive has all content in a single root dir, move the content to the root of extraction
-	DIR_COUNT=$(find "$ARCH_DIR" -type d -maxdepth 1 | wc -l)
+	DIR_COUNT=$(find "$ARCH_DIR" -maxdepth 1 -type d | wc -l)
 	if [ $DIR_COUNT -lt 3 ]; then
 		mv "$ARCH_DIR"/TrueCrypt/* "$ARCH_DIR/"
 		rm -r "$ARCH_DIR/TrueCrypt"
@@ -417,11 +417,11 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 	find . -type f|while read FILE; do
 		popd
 		if [ -f "$REPO/$FILE" ]; then
-			FILENAME_CASING_CHANGED=$(find "$REPO/`dirname "$FILE"`" -name "`basename "$FILE"`" -maxdepth 1 | wc -l)
+			FILENAME_CASING_CHANGED=$(find "$REPO/`dirname "$FILE"`" -maxdepth 1 -name "`basename "$FILE"`" | wc -l)
 			if [ $FILENAME_CASING_CHANGED -eq 0 ]; then
 				# File's casing changed
 				pushd "$REPO"
-				OLD_NAME=$(find "`dirname "$FILE"`" -iname "`basename "$FILE"`" -maxdepth 1)
+				OLD_NAME=$(find "`dirname "$FILE"`" -maxdepth 1 -iname "`basename "$FILE"`")
 				git mv -f "$OLD_NAME" "$FILE" >/dev/null 2>&1
 				popd
 				rm "$ARCH_DIR/$FILE"
