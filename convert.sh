@@ -334,13 +334,13 @@ for (( i=0; i<$NUM_ARCHIVES; i++ )); do
 			fi
 		done
 		popd
-	else
-		BACKUP_DIR_LEFT_ARCHIVE="extracted/${ARCHIVES[i]}"
 
 		if [ $KEEP_EXTRACTED_ARCHIVES == false ]; then
 			rm -r "$BACKUP_DIR_LEFT_ARCHIVE"
 			rm -r "$BACKUP_DIR_RIGHT_ARCHIVE"
 		fi
+	else
+		BACKUP_DIR_LEFT_ARCHIVE="extracted/${ARCHIVES[i]}"
 	fi
 
 
